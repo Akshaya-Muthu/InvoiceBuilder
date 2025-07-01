@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import ClientDetails from "./components/ClientDetails";
-import InvoiceForm from "./components/InvoiceForm";
 import InvoiceItems from "./components/InvoiceItems";
 import InvoicePreview from "./components/InvoicePreview";
 import jsPDF from "jspdf";
@@ -14,9 +13,7 @@ function App() {
     date: "",
   });
 
-  const [items, setItems] = useState([
-    { description: "", quantity: 1, rate: 0, amount: 0 },
-  ]);
+  const [items, setItems] = useState([]);
 
   const downloadPDF = () => {
     const doc = new jsPDF();
@@ -27,11 +24,9 @@ function App() {
     doc.text(`Date: ${client.date}`, 10, 40);
 
     let y = 60;
-    items.forEach((item, index) => {
+    items.forEach((item, i) => {
       doc.text(
-        `${index + 1}. ${item.description} - ${item.quantity} x ₹${
-          item.rate
-        } = ₹${(item.quantity * item.rate).toFixed(2)}`,
+        `${i + 1}. ${item.description} - ${item.quantity} x ₹${item.rate} = ₹${(item.quantity * item.rate).toFixed(2)}`,
         10,
         y
       );
@@ -50,44 +45,23 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white font-sans px-4 py-8 relative overflow-hidden">
-       {/* Floating glitter effect */}
-      {" "}
-      <div className="absolute inset-0 bg-stars bg-cover bg-center opacity-10 pointer-events-none z-0" />
-     {" "}
-      <div className="max-w-5xl mx-auto bg-white/10 backdrop-blur-md text-white p-6 rounded-xl shadow-xl z-10 relative">
-      {" "}
-        <h1 className="text-4xl font-bold text-center text-indigo-400 mb-6 animate-pulse">
-           Invoice Builder 🚀 {" "}
-        </h1>
-         {/* Client Details */}
-         <ClientDetails client={client} setClient={setClient} />{" "}
-        {/* Item Input Form */}
-        <InvoiceForm items={items} setItems={setItems} />{" "}
-        {/* Optional: Item Table View */}{" "}
-        <div className="my-6">
-         {" "}
-          <h2 className="text-lg font-semibold text-indigo-200 mb-2">
-            Quick Items View
-          </h2>
-           <InvoiceItems items={items} setItems={setItems} />{" "}
-        </div>
-        {/* Preview Section */}
-       <InvoicePreview client={client} items={items} />{" "}
-        {/* Download Button */}{" "}
-        <div className="flex justify-end mt-6">
-         {" "}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-6 text-white">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-lg">
+          <h1 className="text-3xl font-bold mb-4 text-center">✨ Aurora Invoice Builder</h1>
+          <ClientDetails client={client} setClient={setClient} />
+          <InvoiceItems items={items} setItems={setItems} />
           <button
             onClick={downloadPDF}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl transition duration-300 transform hover:scale-105 shadow-lg"
+            className="mt-4 w-full bg-gradient-to-r from-pink-500 to-fuchsia-600 py-2 rounded-lg hover:scale-105 transition transform"
           >
-             Download PDF {" "}
+            📥 Download PDF
           </button>
-          {" "}
         </div>
-        {" "}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-lg overflow-auto">
+          <InvoicePreview client={client} items={items} />
+        </div>
       </div>
-     {" "}
     </div>
   );
 }
