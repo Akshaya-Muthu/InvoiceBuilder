@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// App.jsx
+import React, { useRef, useState } from "react";
 import ClientDetails from "./components/ClientDetails";
 import InvoiceItems from "./components/InvoiceItems";
 import InvoicePreview from "./components/InvoicePreview";
@@ -14,34 +15,84 @@ function App() {
   });
 
   const [items, setItems] = useState([]);
+  const invoiceRef = useRef();
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text(`Invoice #${client.number}`, 10, 10);
-    doc.text(`Client: ${client.name}`, 10, 20);
-    doc.text(`Address: ${client.address}`, 10, 30);
-    doc.text(`Date: ${client.date}`, 10, 40);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const logoSize = 20;
 
-    let y = 60;
-    items.forEach((item, i) => {
-      doc.text(
-        `${i + 1}. ${item.description} - ${item.quantity} x ₹${item.rate} = ₹${(item.quantity * item.rate).toFixed(2)}`,
-        10,
-        y
-      );
-      y += 10;
+    // Header with Logo and Title
+    doc.setFillColor(34, 34, 59); // Dark background
+    doc.rect(0, 0, pageWidth, 40, "F");
+    doc.setTextColor(255);
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("Aurora Invoice Builder", 50, 25);
+    doc.setFontSize(10);
+    doc.text("Your trusted billing partner", 50, 32);
+    doc.addImage("https://cdn-icons-png.flaticon.com/512/564/564619.png", "PNG", 14, 10, 20, 20);
+
+    // Client Details Section
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text("Bill To:", 14, 55);
+    doc.setFont("helvetica", "bold");
+    doc.text(client.name, 14, 62);
+    doc.setFont("helvetica", "normal");
+    doc.text(client.address, 14, 69);
+    doc.text(`Invoice #: ${client.number}`, 14, 76);
+    doc.text(`Date: ${client.date}`, 14, 83);
+
+    // Item Table Header
+    const startY = 95;
+    doc.setFont("helvetica", "bold");
+    doc.setFillColor(240);
+    doc.rect(14, startY, pageWidth - 28, 10, "F");
+    doc.setTextColor(0);
+    doc.text("#", 16, startY + 7);
+    doc.text("Description", 26, startY + 7);
+    doc.text("Qty", 120, startY + 7, { align: "right" });
+    doc.text("Rate", 140, startY + 7, { align: "right" });
+    doc.text("Amount", 165, startY + 7, { align: "right" });
+
+    // Item Rows
+    let y = startY + 15;
+    let subtotal = 0;
+    doc.setFont("helvetica", "normal");
+    items.forEach((item, index) => {
+      const amount = item.quantity * item.rate;
+      subtotal += amount;
+      doc.text(String(index + 1), 16, y);
+      doc.text(item.description, 26, y);
+      doc.text(String(item.quantity), 120, y, { align: "right" });
+      doc.text(item.rate.toFixed(2), 140, y, { align: "right" });
+      doc.text(amount.toFixed(2), 165, y, { align: "right" });
+      y += 8;
     });
 
-    const subTotal = items.reduce((sum, i) => sum + i.quantity * i.rate, 0);
-    const tax = subTotal * 0.18;
-    const total = subTotal + tax;
+    // Totals Section
+    const tax = subtotal * 0.1;
+    const total = subtotal + tax;
+    y += 10;
+    doc.setFont("helvetica", "bold");
+    doc.text(`Subtotal: ₹${subtotal.toFixed(2)}`, 140, y, { align: "right" });
+    y += 8;
+    doc.text(`Tax (10%): ₹${tax.toFixed(2)}`, 140, y, { align: "right" });
+    y += 8;
+    doc.text(`Total: ₹${total.toFixed(2)}`, 140, y, { align: "right" });
 
-    doc.text(`Subtotal: ₹${subTotal.toFixed(2)}`, 10, y + 10);
-    doc.text(`Tax (18%): ₹${tax.toFixed(2)}`, 10, y + 20);
-    doc.text(`Total: ₹${total.toFixed(2)}`, 10, y + 30);
+    // Footer with Thank You
+    y += 20;
+    doc.setDrawColor(180);
+    doc.line(14, y, pageWidth - 14, y);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(120);
+    doc.text("Thank you for using Aurora Invoice Builder", 14, y + 10);
 
-    doc.save("invoice.pdf");
+    doc.save(`Aurora_Invoice_${client.number || "bill"}.pdf`);
   };
 
   return (
@@ -58,7 +109,10 @@ function App() {
             📥 Download PDF
           </button>
         </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-lg overflow-auto">
+        <div
+          ref={invoiceRef}
+          className="bg-white text-black rounded-2xl p-6 shadow-lg overflow-auto"
+        >
           <InvoicePreview client={client} items={items} />
         </div>
       </div>
